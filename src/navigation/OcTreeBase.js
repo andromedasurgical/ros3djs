@@ -469,7 +469,7 @@ ROS3D.OcTreeBase.prototype._buildFaces = function () {
           pos[1] + vertex[1] * size,
           pos[2] + vertex[2] * size
         );
-      });
+      }.bind(this));
 
       const colorArr = [color.r, color.g, color.b];
 
@@ -545,7 +545,7 @@ ROS3D.OcTreeBase.prototype._buildFaces = function () {
         }
       }
 
-    });
+    }.bind(this));
 
   });
 

@@ -122,8 +122,6 @@ ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
           };
 
           if (message.id in ctorTable) {
-            console.log(message.id, ctorTable);
-
             newOcTree = new ctorTable[message.id](
               options
             );
@@ -140,7 +138,9 @@ ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
       }
 
       resolve(newOcTree);
-    }.bind(this));
+    }.bind(this)).catch(function (error) {
+      console.log(error)
+    });
 
 };
 

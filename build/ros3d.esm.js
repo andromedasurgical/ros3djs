@@ -56374,7 +56374,7 @@ OcTreeBase.prototype._buildFaces = function _buildFaces () {
           pos[1] + vertex[1] * size,
           pos[2] + vertex[2] * size
         );
-      });
+      }.bind(this));
 
       var colorArr = [color.r, color.g, color.b];
 
@@ -56446,10 +56446,12 @@ OcTreeBase.prototype._buildFaces = function _buildFaces () {
         // of the tree, but also need to add a geometry, because might
         // not be "fully covered" by neighboring voxels on the lowest level
 
-        if (geometry._checkNeighborsTouchingFace(face, neighborNode, this.voxelRenderMode)) ;
+        if (geometry._checkNeighborsTouchingFace(face, neighborNode, this.voxelRenderMode)) {
+          geometry._insertFace(face, pos, size, this._obtainColor(node));
+        }
       }
 
-    });
+    }.bind(this$1$1));
 
   });
 
@@ -56652,8 +56654,6 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
             };
 
             if (message.id in ctorTable) {
-              console.log(message.id, ctorTable);
-
               newOcTree = new ctorTable[message.id](
                 options
               );
@@ -56670,7 +56670,9 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
         }
 
         resolve(newOcTree);
-      }.bind(this));
+      }.bind(this)).catch(function (error) {
+        console.log(error);
+      });
 
   };
   OcTreeClient.prototype._processMessagePrivate = function _processMessagePrivate (message) {
