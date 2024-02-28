@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4/lib/eventemitter2.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.js"></script>
 <script src="../build/ros3d.js"></script>
+<!-- <script src="../es6-support/index.js"></script> -->
 
 <script>
   /**
@@ -26,7 +27,7 @@
       antialias : true
     });
 
-    var mapClient = new ROS3D.OccupancyMapClient({
+    var mapClient = new ROS3D.OcTreeClient({
       ros: ros,
       rootObject: viewer.scene,
       continuous: false,
