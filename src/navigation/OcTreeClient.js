@@ -134,7 +134,7 @@ ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
 
 
       {
-        newOcTree.buildGeometry();
+        newOcTree.buildPoints();
       }
 
       resolve(newOcTree);

@@ -56317,9 +56317,9 @@ OcTreeBase.prototype._readNodeData = function _readNodeData (dataStream, node) {
   console.error('Not implemented');
 };
 /**
-* Builds up THREE.js geometry from tree data.
+* Builds up THREE.js mesh from tree data.
 */
-OcTreeBase.prototype.buildGeometry = function buildGeometry () {
+OcTreeBase.prototype.buildMesh = function buildMesh () {
   console.assert(this._rootNode !== null, 'No tree data');
   var ref = this._buildFaces();
     var vertices = ref.vertices;
@@ -56346,6 +56346,29 @@ OcTreeBase.prototype.buildGeometry = function buildGeometry () {
   var mesh = new THREE.Mesh(geometry, material);
   this.object = new THREE.Object3D();
   this.object.add(mesh);
+};
+/**
+* Builds up THREE.js points from tree data.
+*/
+OcTreeBase.prototype.buildPoints = function buildPoints () {
+  console.assert(this._rootNode !== null, 'No tree data');
+  var ref = this._buildPointsInput();
+    var positions = ref.positions;
+    var colors = ref.colors;
+    var sizes = ref.sizes;
+
+  var geometry = new THREE.BufferGeometry();
+
+  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+  geometry.addAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ));
+
+  var material = new THREE.PointsMaterial( { size: this.resolution } );
+  material.vertexColors = true;
+  var points = new THREE.Points( geometry, material );
+
+  this.object = new THREE.Object3D();
+  this.object.add(points);
 };
 OcTreeBase.prototype._traverseLeaves = function _traverseLeaves (callback) {
   var stack = new Array();
@@ -56485,6 +56508,39 @@ OcTreeBase.prototype._buildFaces = function _buildFaces () {
     normals: geometry.normals,
     colors: geometry.colors,
     indices: geometry.indices
+  };
+
+};
+OcTreeBase.prototype._buildPointsInput = function _buildPointsInput () {
+    var this$1$1 = this;
+
+  var positions = [];
+  var colors = [];
+  var sizes = [];
+
+  this._traverseLeaves(function (node, key, depth) {
+    var pos = this$1$1._computeCoordFromKey(key);
+    var size = this$1$1.nodeSizeTable[depth];
+
+    var isOccupied = this$1$1._checkOccupied(node);
+
+    // By default it will show ALL
+    // Hide free voxels if set
+    if (!isOccupied && this$1$1.voxelRenderMode === OcTreeVoxelRenderMode.OCCUPIED) { return; }
+
+    // Hide occuped voxels if set.
+    if (isOccupied && this$1$1.voxelRenderMode === OcTreeVoxelRenderMode.FREE) { return; }
+
+    var color = this$1$1._obtainColor(node);
+    colors.push(color.r, color.g, color.b);
+    positions.push(pos[0], pos[1], pos[2]);
+    sizes.push(size);
+  });
+
+  return {
+    colors: colors,
+    positions: positions,
+    sizes: sizes
   };
 
 };
@@ -56690,7 +56746,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
 
 
         {
-          newOcTree.buildGeometry();
+          newOcTree.buildPoints();
         }
 
         resolve(newOcTree);

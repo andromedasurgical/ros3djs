@@ -392,9 +392,9 @@ ROS3D.OcTreeBase.prototype._readNodeData = function (dataStream, node) {
 };
 
 /**
-* Builds up THREE.js geometry from tree data.
+* Builds up THREE.js mesh from tree data.
 */
-ROS3D.OcTreeBase.prototype.buildGeometry = function () {
+ROS3D.OcTreeBase.prototype.buildMesh = function () {
   console.assert(this._rootNode !== null, 'No tree data');
   const { vertices, normals, colors, indices } = this._buildFaces();
 
@@ -417,6 +417,27 @@ ROS3D.OcTreeBase.prototype.buildGeometry = function () {
   const mesh = new THREE.Mesh(geometry, material);
   this.object = new THREE.Object3D();
   this.object.add(mesh);
+};
+
+/**
+* Builds up THREE.js points from tree data.
+*/
+ROS3D.OcTreeBase.prototype.buildPoints = function () {
+  console.assert(this._rootNode !== null, 'No tree data');
+  const { positions, colors, sizes } = this._buildPointsInput();
+
+  const geometry = new THREE.BufferGeometry();
+
+  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+  geometry.addAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ));
+
+  const material = new THREE.PointsMaterial( { size: this.resolution } );
+  material.vertexColors = true;
+  const points = new THREE.Points( geometry, material );
+
+  this.object = new THREE.Object3D();
+  this.object.add(points);
 };
 
 ROS3D.OcTreeBase.prototype._traverseLeaves = function (callback) {
@@ -555,6 +576,38 @@ ROS3D.OcTreeBase.prototype._buildFaces = function () {
     normals: geometry.normals,
     colors: geometry.colors,
     indices: geometry.indices
+  };
+
+};
+
+ROS3D.OcTreeBase.prototype._buildPointsInput = function () {
+  const positions = [];
+  const colors = [];
+  const sizes = [];
+
+  this._traverseLeaves((node, key, depth) => {
+    const pos = this._computeCoordFromKey(key);
+    const size = this.nodeSizeTable[depth];
+
+    const isOccupied = this._checkOccupied(node);
+
+    // By default it will show ALL
+    // Hide free voxels if set
+    if (!isOccupied && this.voxelRenderMode === ROS3D.OcTreeVoxelRenderMode.OCCUPIED) { return; }
+
+    // Hide occuped voxels if set.
+    if (isOccupied && this.voxelRenderMode === ROS3D.OcTreeVoxelRenderMode.FREE) { return; }
+
+    const color = this._obtainColor(node)
+    colors.push(color.r, color.g, color.b)
+    positions.push(pos[0], pos[1], pos[2])
+    sizes.push(size)
+  });
+
+  return {
+    colors: colors,
+    positions: positions,
+    sizes: sizes
   };
 
 };

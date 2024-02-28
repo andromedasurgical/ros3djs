@@ -56575,9 +56575,9 @@ var ROS3D = (function (exports, ROSLIB) {
 	  };
 
 	  /**
-	  * Builds up THREE.js geometry from tree data.
+	  * Builds up THREE.js mesh from tree data.
 	  */
-	  buildGeometry() {
+	  buildMesh() {
 	    console.assert(this._rootNode !== null, 'No tree data');
 	    const { vertices, normals, colors, indices } = this._buildFaces();
 
@@ -56600,6 +56600,27 @@ var ROS3D = (function (exports, ROSLIB) {
 	    const mesh = new THREE.Mesh(geometry, material);
 	    this.object = new THREE.Object3D();
 	    this.object.add(mesh);
+	  };
+
+	  /**
+	  * Builds up THREE.js points from tree data.
+	  */
+	  buildPoints() {
+	    console.assert(this._rootNode !== null, 'No tree data');
+	    const { positions, colors, sizes } = this._buildPointsInput();
+
+	    const geometry = new THREE.BufferGeometry();
+
+	    geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+	    geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+	    geometry.addAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ));
+
+	    const material = new THREE.PointsMaterial( { size: this.resolution } );
+	    material.vertexColors = true;
+	    const points = new THREE.Points( geometry, material );
+
+	    this.object = new THREE.Object3D();
+	    this.object.add(points);
 	  };
 
 	  _traverseLeaves(callback) {
@@ -56738,6 +56759,38 @@ var ROS3D = (function (exports, ROSLIB) {
 	      normals: geometry.normals,
 	      colors: geometry.colors,
 	      indices: geometry.indices
+	    };
+
+	  };
+
+	  _buildPointsInput() {
+	    const positions = [];
+	    const colors = [];
+	    const sizes = [];
+
+	    this._traverseLeaves((node, key, depth) => {
+	      const pos = this._computeCoordFromKey(key);
+	      const size = this.nodeSizeTable[depth];
+
+	      const isOccupied = this._checkOccupied(node);
+
+	      // By default it will show ALL
+	      // Hide free voxels if set
+	      if (!isOccupied && this.voxelRenderMode === OcTreeVoxelRenderMode.OCCUPIED) { return; }
+
+	      // Hide occuped voxels if set.
+	      if (isOccupied && this.voxelRenderMode === OcTreeVoxelRenderMode.FREE) { return; }
+
+	      const color = this._obtainColor(node);
+	      colors.push(color.r, color.g, color.b);
+	      positions.push(pos[0], pos[1], pos[2]);
+	      sizes.push(size);
+	    });
+
+	    return {
+	      colors: colors,
+	      positions: positions,
+	      sizes: sizes
 	    };
 
 	  };
@@ -56983,7 +57036,7 @@ var ROS3D = (function (exports, ROSLIB) {
 
 
 	        {
-	          newOcTree.buildGeometry();
+	          newOcTree.buildPoints();
 	        }
 
 	        resolve(newOcTree);
