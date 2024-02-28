@@ -56654,7 +56654,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
 
   OcTreeClient.prototype.unsubscribe = function unsubscribe () {
     if (this.rosTopic) {
-      this.rosTopic.unsubscribe(this.processMessage);
+      this.rosTopic.unsubscribe();
     }
   };
   OcTreeClient.prototype.subscribe = function subscribe () {

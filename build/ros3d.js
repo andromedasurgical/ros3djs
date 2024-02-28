@@ -56965,7 +56965,7 @@ var ROS3D = (function (exports, ROSLIB) {
 
 	  unsubscribe() {
 	    if (this.rosTopic) {
-	      this.rosTopic.unsubscribe(this.processMessage);
+	      this.rosTopic.unsubscribe();
 	    }
 	  };
 
