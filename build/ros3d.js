@@ -56277,6 +56277,8 @@ var ROS3D = (function (exports, ROSLIB) {
 
 	    this.voxelRenderMode = (typeof options.voxelRenderMode !== 'undefined') ? options.voxelRenderMode : OcTreeVoxelRenderMode.OCCUPIED;
 
+	    this.pointStyle = (typeof options.pointStyle !== 'undefined') ? options.pointStyle : 'square';
+
 	    this._rootNode = null;
 	    this._treeDepth = 16;
 	    this._treeMaxKeyVal = 32768;
@@ -56615,8 +56617,19 @@ var ROS3D = (function (exports, ROSLIB) {
 	    geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
 	    geometry.addAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ));
 
-	    const material = new THREE.PointsMaterial( { size: this.resolution } );
-	    material.vertexColors = true;
+	    let material;
+	    if (this.pointStyle === 'circle') {
+	      const sprite = new THREE.TextureLoader().load( '../textures/sprites/disc.png' );
+	      sprite.colorSpace = THREE.SRGBColorSpace;
+
+	      material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true } );
+	      // material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
+	    } else {
+	      material = new THREE.PointsMaterial( { size: this.resolution } );
+	      material.vertexColors = true;
+	    }
+
+
 	    const points = new THREE.Points( geometry, material );
 
 	    this.object = new THREE.Object3D();
@@ -56953,6 +56966,7 @@ var ROS3D = (function (exports, ROSLIB) {
 	    if (typeof options.palette !== 'undefined') { this.options['palette'] = options.palette; }
 	    if (typeof options.paletteScale !== 'undefined') { this.options['paletteScale'] = options.palette; }
 	    if (typeof options.voxelRenderMode !== 'undefined') { this.options['voxelRenderMode'] = options.voxelRenderMode; }
+	    if (typeof options.pointStyle !== 'undefined') { this.options['pointStyle'] = options.pointStyle; }
 
 	    // current grid that is displayed
 	    this.currentMap = null;
@@ -56998,6 +57012,9 @@ var ROS3D = (function (exports, ROSLIB) {
 
 	  };
 
+	  updatePointStyle(value) {
+	    if (typeof value !== 'undefined') { this.options['pointStyle'] = value; }
+	  }
 
 	  _loadOcTree(message) {
 

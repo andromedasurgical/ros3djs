@@ -94,6 +94,8 @@ ROS3D.OcTreeBase = function(options) {
 
   this.voxelRenderMode = (typeof options.voxelRenderMode !== 'undefined') ? options.voxelRenderMode : ROS3D.OcTreeVoxelRenderMode.OCCUPIED;
 
+  this.pointStyle = (typeof options.pointStyle !== 'undefined') ? options.pointStyle : 'square'
+
   this._rootNode = null;
   this._treeDepth = 16;
   this._treeMaxKeyVal = 32768;
@@ -432,8 +434,19 @@ ROS3D.OcTreeBase.prototype.buildPoints = function () {
   geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
   geometry.addAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ));
 
-  const material = new THREE.PointsMaterial( { size: this.resolution } );
-  material.vertexColors = true;
+  let material;
+  if (this.pointStyle === 'circle') {
+    const sprite = new THREE.TextureLoader().load( '../textures/sprites/disc.png' );
+    sprite.colorSpace = THREE.SRGBColorSpace;
+
+    material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true } );
+    // material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
+  } else {
+    material = new THREE.PointsMaterial( { size: this.resolution } );
+    material.vertexColors = true;
+  }
+
+
   const points = new THREE.Points( geometry, material );
 
   this.object = new THREE.Object3D();

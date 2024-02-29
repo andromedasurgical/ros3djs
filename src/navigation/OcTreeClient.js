@@ -50,6 +50,7 @@ ROS3D.OcTreeClient = function(options) {
   if (typeof options.palette !== 'undefined') { this.options['palette'] = options.palette; }
   if (typeof options.paletteScale !== 'undefined') { this.options['paletteScale'] = options.palette; }
   if (typeof options.voxelRenderMode !== 'undefined') { this.options['voxelRenderMode'] = options.voxelRenderMode; }
+  if (typeof options.pointStyle !== 'undefined') { this.options['pointStyle'] = options.pointStyle; }
 
   // current grid that is displayed
   this.currentMap = null;
@@ -96,6 +97,9 @@ ROS3D.OcTreeClient.prototype.processMessage = function (message) {
 
 };
 
+ROS3D.OcTreeClient.prototype.updatePointStyle = function (value) {
+  if (typeof value !== 'undefined') { this.options['pointStyle'] = value; }
+}
 
 ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
 

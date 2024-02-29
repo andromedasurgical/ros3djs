@@ -56033,6 +56033,8 @@ var OcTreeBase = function OcTreeBase(options) {
 
   this.voxelRenderMode = (typeof options.voxelRenderMode !== 'undefined') ? options.voxelRenderMode : OcTreeVoxelRenderMode.OCCUPIED;
 
+  this.pointStyle = (typeof options.pointStyle !== 'undefined') ? options.pointStyle : 'square';
+
   this._rootNode = null;
   this._treeDepth = 16;
   this._treeMaxKeyVal = 32768;
@@ -56363,8 +56365,19 @@ OcTreeBase.prototype.buildPoints = function buildPoints () {
   geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
   geometry.addAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ));
 
-  var material = new THREE.PointsMaterial( { size: this.resolution } );
-  material.vertexColors = true;
+  var material;
+  if (this.pointStyle === 'circle') {
+    var sprite = new THREE.TextureLoader().load( '../textures/sprites/disc.png' );
+    sprite.colorSpace = THREE.SRGBColorSpace;
+
+    material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true } );
+    // material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
+  } else {
+    material = new THREE.PointsMaterial( { size: this.resolution } );
+    material.vertexColors = true;
+  }
+
+
   var points = new THREE.Points( geometry, material );
 
   this.object = new THREE.Object3D();
@@ -56663,6 +56676,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
     if (typeof options.palette !== 'undefined') { this.options['palette'] = options.palette; }
     if (typeof options.paletteScale !== 'undefined') { this.options['paletteScale'] = options.palette; }
     if (typeof options.voxelRenderMode !== 'undefined') { this.options['voxelRenderMode'] = options.voxelRenderMode; }
+    if (typeof options.pointStyle !== 'undefined') { this.options['pointStyle'] = options.pointStyle; }
 
     // current grid that is displayed
     this.currentMap = null;
@@ -56707,6 +56721,9 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
       this.rosTopic.unsubscribe(this.processMessage);
     }
 
+  };
+  OcTreeClient.prototype.updatePointStyle = function updatePointStyle (value) {
+    if (typeof value !== 'undefined') { this.options['pointStyle'] = value; }
   };
 
   OcTreeClient.prototype._loadOcTree = function _loadOcTree (message) {
