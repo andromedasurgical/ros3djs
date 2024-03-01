@@ -57,7 +57,7 @@ ROS3D.OcTreeClient = function(options) {
 
   // subscribe to the topic
   this.rosTopic = undefined;
-  this.subscribe();
+  this._loadSprites();
 };
 
 ROS3D.OcTreeClient.prototype.__proto__ = EventEmitter2.prototype;
@@ -101,6 +101,16 @@ ROS3D.OcTreeClient.prototype.updatePointStyle = function (value) {
   if (typeof value !== 'undefined') { this.options['pointStyle'] = value; }
 }
 
+ROS3D.OcTreeClient.prototype._loadSprites = function () {
+  const loader = new THREE.TextureLoader()
+  this.sprites = {}
+
+  loader.load( '../textures/sprites/disc.png', function (value) {
+    this.sprites.disc = value
+    this.subscribe()
+  }.bind(this))
+}
+
 ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
 
   return new Promise(
@@ -114,9 +124,7 @@ ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
       let newOcTree = null;
       {
         if (message.binary) {
-          newOcTree = new ROS3D.OcTreeBase(
-            options
-          );
+          newOcTree = new ROS3D.OcTreeBase({ options, sprites: this.sprites});
           newOcTree.readBinary(message.data);
         } else {
 
@@ -126,10 +134,7 @@ ROS3D.OcTreeClient.prototype._loadOcTree = function (message) {
           };
 
           if (message.id in ctorTable) {
-            newOcTree = new ctorTable[message.id](
-              options
-            );
-
+            newOcTree = new ctorTable[message.id]({ options, sprites: this.sprites});
             newOcTree.read(message.data);
           }
 

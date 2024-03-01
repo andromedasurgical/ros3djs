@@ -86,14 +86,14 @@ function InStream(data, isLittleEndian) {
  *    * color - color of the visualized map (if solid coloring option was set)
  *    * voxelRenderMode - toggle between rendering modes @see ROS3D.OcTreeVoxelRenderMode
  */
-ROS3D.OcTreeBase = function(options) {
-
+ROS3D.OcTreeBase = function({ options, sprites }) {
   this.resolution = (typeof options.resolution !== 'undefined') ? options.resolution : 1.;
   this.color = new THREE.Color((typeof options.color !== 'undefined') ? options.color : 'green');
   this.opacity = (typeof options.opacity !== 'undefined') ? options.opacity : 1.;
 
   this.voxelRenderMode = (typeof options.voxelRenderMode !== 'undefined') ? options.voxelRenderMode : ROS3D.OcTreeVoxelRenderMode.OCCUPIED;
 
+  this.sprites = sprites
   this.pointStyle = (typeof options.pointStyle !== 'undefined') ? options.pointStyle : 'square'
 
   this._rootNode = null;
@@ -436,10 +436,8 @@ ROS3D.OcTreeBase.prototype.buildPoints = function () {
 
   let material;
   if (this.pointStyle === 'circle') {
-    const sprite = new THREE.TextureLoader().load( '../textures/sprites/disc.png' );
-    sprite.colorSpace = THREE.SRGBColorSpace;
-
-    material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true } );
+    this.sprites.disc.colorSpace = THREE.SRGBColorSpace;
+    material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: this.sprites.disc, alphaTest: 0.5, transparent: true } );
     // material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
   } else {
     material = new THREE.PointsMaterial( { size: this.resolution } );

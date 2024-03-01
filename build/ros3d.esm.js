@@ -56001,7 +56001,9 @@ function InStream(data, isLittleEndian) {
 }
 // ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 
-var OcTreeBase = function OcTreeBase(options) {
+var OcTreeBase = function OcTreeBase(ref) {
+  var options = ref.options;
+  var sprites = ref.sprites;
 
   this.resolution = (typeof options.resolution !== 'undefined') ? options.resolution : 1.;
   this.color = new THREE.Color((typeof options.color !== 'undefined') ? options.color : 'green');
@@ -56009,6 +56011,7 @@ var OcTreeBase = function OcTreeBase(options) {
 
   this.voxelRenderMode = (typeof options.voxelRenderMode !== 'undefined') ? options.voxelRenderMode : OcTreeVoxelRenderMode.OCCUPIED;
 
+  this.sprites = sprites;
   this.pointStyle = (typeof options.pointStyle !== 'undefined') ? options.pointStyle : 'square';
 
   this._rootNode = null;
@@ -56343,10 +56346,8 @@ OcTreeBase.prototype.buildPoints = function buildPoints () {
 
   var material;
   if (this.pointStyle === 'circle') {
-    var sprite = new THREE.TextureLoader().load( '../textures/sprites/disc.png' );
-    sprite.colorSpace = THREE.SRGBColorSpace;
-
-    material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true } );
+    this.sprites.disc.colorSpace = THREE.SRGBColorSpace;
+    material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: this.sprites.disc, alphaTest: 0.5, transparent: true } );
     // material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
   } else {
     material = new THREE.PointsMaterial( { size: this.resolution } );
@@ -56659,7 +56660,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
 
     // subscribe to the topic
     this.rosTopic = undefined;
-    this.subscribe();
+    this._loadSprites();
   }
 
   if ( EventEmitter2 ) OcTreeClient.__proto__ = EventEmitter2;
@@ -56702,6 +56703,16 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
     if (typeof value !== 'undefined') { this.options['pointStyle'] = value; }
   };
 
+  OcTreeClient.prototype._loadSprites = function _loadSprites () {
+    var loader = new THREE.TextureLoader();
+    this.sprites = {};
+
+    loader.load( '../textures/sprites/disc.png', function (value) {
+      this.sprites.disc = value;
+      this.subscribe();
+    }.bind(this));
+  };
+
   OcTreeClient.prototype._loadOcTree = function _loadOcTree (message) {
 
     return new Promise(
@@ -56715,9 +56726,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
         var newOcTree = null;
         {
           if (message.binary) {
-            newOcTree = new OcTreeBase(
-              options
-            );
+            newOcTree = new OcTreeBase({ options: options, sprites: this.sprites});
             newOcTree.readBinary(message.data);
           } else {
 
@@ -56727,10 +56736,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
             };
 
             if (message.id in ctorTable) {
-              newOcTree = new ctorTable[message.id](
-                options
-              );
-
+              newOcTree = new ctorTable[message.id]({ options: options, sprites: this.sprites});
               newOcTree.read(message.data);
             }
 

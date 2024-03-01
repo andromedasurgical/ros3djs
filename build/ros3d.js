@@ -56269,14 +56269,14 @@ var ROS3D = (function (exports, ROSLIB) {
 	   *    * color - color of the visualized map (if solid coloring option was set)
 	   *    * voxelRenderMode - toggle between rendering modes @see ROS3D.OcTreeVoxelRenderMode
 	   */
-	  constructor(options) {
-
+	  constructor({ options, sprites }) {
 	    this.resolution = (typeof options.resolution !== 'undefined') ? options.resolution : 1.;
 	    this.color = new THREE.Color((typeof options.color !== 'undefined') ? options.color : 'green');
 	    this.opacity = (typeof options.opacity !== 'undefined') ? options.opacity : 1.;
 
 	    this.voxelRenderMode = (typeof options.voxelRenderMode !== 'undefined') ? options.voxelRenderMode : OcTreeVoxelRenderMode.OCCUPIED;
 
+	    this.sprites = sprites;
 	    this.pointStyle = (typeof options.pointStyle !== 'undefined') ? options.pointStyle : 'square';
 
 	    this._rootNode = null;
@@ -56619,10 +56619,8 @@ var ROS3D = (function (exports, ROSLIB) {
 
 	    let material;
 	    if (this.pointStyle === 'circle') {
-	      const sprite = new THREE.TextureLoader().load( '../textures/sprites/disc.png' );
-	      sprite.colorSpace = THREE.SRGBColorSpace;
-
-	      material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: sprite, alphaTest: 0.5, transparent: true } );
+	      this.sprites.disc.colorSpace = THREE.SRGBColorSpace;
+	      material = new THREE.PointsMaterial( { size: this.resolution, sizeAttenuation: true, map: this.sprites.disc, alphaTest: 0.5, transparent: true } );
 	      // material.color.setHSL( 1.0, 0.3, 0.7, THREE.SRGBColorSpace );
 	    } else {
 	      material = new THREE.PointsMaterial( { size: this.resolution } );
@@ -56973,7 +56971,7 @@ var ROS3D = (function (exports, ROSLIB) {
 
 	    // subscribe to the topic
 	    this.rosTopic = undefined;
-	    this.subscribe();
+	    this._loadSprites();
 	  };
 
 
@@ -57016,6 +57014,16 @@ var ROS3D = (function (exports, ROSLIB) {
 	    if (typeof value !== 'undefined') { this.options['pointStyle'] = value; }
 	  }
 
+	  _loadSprites() {
+	    const loader = new THREE.TextureLoader();
+	    this.sprites = {};
+
+	    loader.load( '../textures/sprites/disc.png', function (value) {
+	      this.sprites.disc = value;
+	      this.subscribe();
+	    }.bind(this));
+	  }
+
 	  _loadOcTree(message) {
 
 	    return new Promise(
@@ -57029,9 +57037,7 @@ var ROS3D = (function (exports, ROSLIB) {
 	        let newOcTree = null;
 	        {
 	          if (message.binary) {
-	            newOcTree = new OcTreeBase(
-	              options
-	            );
+	            newOcTree = new OcTreeBase({ options, sprites: this.sprites});
 	            newOcTree.readBinary(message.data);
 	          } else {
 
@@ -57041,10 +57047,7 @@ var ROS3D = (function (exports, ROSLIB) {
 	            };
 
 	            if (message.id in ctorTable) {
-	              newOcTree = new ctorTable[message.id](
-	                options
-	              );
-
+	              newOcTree = new ctorTable[message.id]({ options, sprites: this.sprites});
 	              newOcTree.read(message.data);
 	            }
 
