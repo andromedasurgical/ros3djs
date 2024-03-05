@@ -57031,7 +57031,7 @@ var ROS3D = (function (exports, ROSLIB) {
 
 	        // 1. Create the corresponding octree object from message
 	        const options = Object.assign({
-	          resolution: message.resolution,
+	          resolution: message.resolution / .0005,
 	        }, this.options);
 
 	        let newOcTree = null;

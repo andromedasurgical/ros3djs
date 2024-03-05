@@ -56744,7 +56744,7 @@ var OcTreeClient = /*@__PURE__*/(function (EventEmitter2) {
 
         // 1. Create the corresponding octree object from message
         var options = Object.assign({
-          resolution: message.resolution,
+          resolution: message.resolution / .0005,
         }, this.options);
 
         var newOcTree = null;
